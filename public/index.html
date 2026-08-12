@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>answer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f0e17;
+    --card-bg: #1a1a2e;
+    --card-bg-active: #232347;
+    --text: #fffffe;
+    --muted: #94a1b2;
+    --accent: #7f5af0;
+    --success: #2cb67d;
+    --error: #ff4757;
+    --border: #2a2a4a;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    padding: 40px 0 24px;
+  }
+
+  header h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .progress {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    letter-spacing: 0.05em;
+  }
+
+  .progress span {
+    color: var(--accent);
+    font-weight: 600;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  .level-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: all 0.35s ease;
+    opacity: 0.4;
+    position: relative;
+  }
+
+  .level-card.unlocked {
+    opacity: 1;
+    border-color: var(--accent);
+    background: var(--card-bg-active);
+    box-shadow: 0 0 28px rgba(127, 90, 240, 0.18);
+  }
+
+  .level-card.completed {
+    opacity: 0.7;
+    border-color: rgba(44, 182, 125, 0.5);
+  }
+
+  .level-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .level-number {
+    color: var(--accent);
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .level-card.completed .level-number {
+    color: var(--success);
+  }
+
+  .level-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .level-status {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .level-hint {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.55;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .password-input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .password-input:focus {
+    border-color: var(--accent);
+  }
+
+  .password-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .verify-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .verify-btn:hover:not(:disabled) {
+    background: #6a47e0;
+  }
+
+  .verify-btn:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .download-group {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .download-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .download-pwd {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .pass-count {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ===== 顶部用户栏 ===== */
+  .user-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+  }
+  .user-badge {
+    background: var(--accent);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .user-actions { display: flex; gap: 10px; }
+  .btn-text {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .btn-text:hover { color: var(--text); background: var(--border); }
+
+  /* ===== 登录/注册弹窗 ===== */
+  .auth-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 14, 23, 0.96);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .auth-box h2 {
+    font-family: Georgia, serif;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .auth-sub {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+  .auth-tabs {
+    display: flex;
+    background: var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+  .auth-tabs button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .auth-tabs button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+  .auth-form label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .auth-form input, .auth-form select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    font-family: inherit;
+  }
+  .auth-form input:focus, .auth-form select:focus {
+    border-color: var(--accent);
+  }
+  .auth-submit {
+    width: 100%;
+    margin-top: 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .auth-submit:hover { background: #6a47e0; }
+  .auth-error {
+    color: var(--error);
+    font-size: 0.85rem;
+    margin-top: 12px;
+    text-align: center;
+    min-height: 1.2em;
+  }
+  .code-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .code-input-group input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    font-family: inherit;
+    text-align: left;
+  }
+  .code-input-group input:focus {
+    border-color: var(--accent);
+  }
+  .send-code-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .send-code-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+  }
+  .send-code-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ===== "已经有人通过"提示 ===== */
+  .already-passed {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(44, 182, 125, 0.1);
+    border: 1px solid rgba(44, 182, 125, 0.3);
+    border-radius: 8px;
+    color: var(--success);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .message {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+  }
+
+  .message.success { color: var(--success); }
+  .message.error { color: var(--error); }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .shake { animation: shake 0.4s ease; }
+
+  /* Celebration overlay */
+  .celebration {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    overflow-y: auto;
+  }
+
+  .celebration.show {
+    display: flex;
+  }
+
+  .celebration-content {
+    max-width: 500px;
+    margin: auto;
+  }
+
+  .celebration h2 {
+    font-family: Georgia, serif;
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .celebration > .celebration-content > p {
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .answers-list {
+    text-align: left;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 20px;
+    margin-bottom: 24px;
+    list-style: none;
+  }
+
+  .answers-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.95rem;
+  }
+
+  .answers-list li:last-child { border-bottom: none; }
+
+  .answers-list .label { color: var(--muted); }
+  .answers-list .value { color: var(--accent); font-weight: 600; }
+
+  .restart-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .restart-btn:hover {
+    background: rgba(127, 90, 240, 0.1);
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 30px 0 20px;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 12px; }
+    header h1 { font-size: 1.8rem; }
+    header { padding: 24px 0 18px; }
+    .level-card { padding: 18px; }
+    .input-group { flex-direction: column; }
+    .verify-btn { width: 100%; padding: 12px; }
+    .celebration h2 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+    <!-- 顶部用户栏 -->
+    <div class="user-bar" id="user-bar" style="display:none;">
+      <div class="user-info">
+        <span>👋</span>
+        <span><strong id="user-name"></strong></span>
+        <span style="color:var(--muted); font-size:0.8rem; font-family:'SF Mono',Menlo,monospace;" id="user-email"></span>
+      </div>
+      <div class="user-actions">
+        <button class="btn-text" onclick="logout()">重置进度</button>
+      </div>
+    </div>
+
+    <header>
+    <h1>解密闯关</h1>
+    <p>依次破解 7 道密码，揭开最终答案</p>
+  </header>
+
+  <div class="progress">
+    进度：<span id="progress-text">0 / 7</span>
+  </div>
+
+  <main id="levels"></main>
+
+  <footer>密码验证不区分大小写 · 按回车键可快速提交</footer>
+</div>
+
+<div class="celebration" id="celebration">
+  <div class="celebration-content">
+    <h2>🎉 恭喜你完成全部解密！</h2>
+    <p>所有答案已揭晓。</p>
+    <ul class="answers-list" id="answers-list"></ul>
+    <button class="restart-btn" onclick="resetGame()">重新挑战</button>
+  </div>
+</div>
+
+  <!-- 登录/注册弹窗 -->
+  <div class="auth-overlay" id="auth-overlay">
+    <div class="auth-box">
+      <h2>解密闯关</h2>
+      <p class="auth-sub">登录后即可开始闯关</p>
+
+      <div class="auth-tabs">
+        <button id="tab-login" onclick="switchAuthTab('login')" class="active">登录</button>
+        <button id="tab-register" onclick="switchAuthTab('register')">注册</button>
+      </div>
+
+      <form class="auth-form active" id="form-login" onsubmit="event.preventDefault(); doLogin();">
+        <label>用户名</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="输入用户名">
+        <label>密码</label>
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="输入密码">
+        <button type="submit" class="auth-submit">登录</button>
+        <div class="auth-error" id="login-error"></div>
+      </form>
+
+      <form class="auth-form" id="form-register" onsubmit="event.preventDefault(); doRegister();">
+        <label>用户名（2-20 位）</label>
+        <input type="text" id="reg-username" autocomplete="username" placeholder="设置用户名">
+        <label>QQ 邮箱</label>
+        <input type="email" id="reg-email" autocomplete="email" placeholder="你的 QQ 邮箱（如 123456789@qq.com）">
+        <label>邮箱验证码</label>
+        <div class="code-input-group">
+          <input type="text" id="reg-code" autocomplete="one-time-code" placeholder="输入验证码" inputmode="numeric" pattern="[0-9]{6}" maxlength="6">
+          <button type="button" class="send-code-btn" id="send-code-btn" onclick="sendVerificationCode()">发送验证码</button>
+        </div>
+        <label>密码（至少 3 位）</label>
+        <input type="password" id="reg-password" autocomplete="new-password" placeholder="设置密码">
+        <button type="submit" class="auth-submit">注册并登录</button>
+        <div class="auth-error" id="reg-error"></div>
+      </form>
+
+      <!-- 游客模式入口 -->
+      <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+        <button type="button" onclick="enterGuestMode()" style="background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:10px 24px; cursor:pointer; font-size:0.9rem; width:100%; transition: all 0.2s;" onmouseover="this.style.color='var(--text)'; this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)'; this.style.borderColor='var(--border)'">
+          👁 游客模式（无需登录）
+        </button>
+        <p style="margin-top: 10px; font-size: 0.75rem; color: var(--muted);">
+          游客可体验答题，但不记录通过人数
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 注销账号确认弹窗 -->
+  <div class="auth-overlay" id="delete-overlay" style="display:none;">
+    <div class="auth-box" style="max-width:400px;">
+      <h2 style="color:var(--error);">⚠️ 注销账号</h2>
+      <p class="auth-sub">此操作不可撤销，您的所有数据将被永久删除</p>
+      
+      <div style="background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.3); border-radius:8px; padding:12px; margin:16px 0; font-size:0.85rem; color:var(--muted);">
+        <strong style="color:var(--text);">注销后将删除：</strong><br>
+        · 您的账号信息<br>
+        · 您的邮箱绑定<br>
+        · 您的通关记录<br>
+        以上操作均不可恢复
+      </div>
+
+      <form onsubmit="event.preventDefault(); doDeleteAccount();">
+        <label>请输入密码以确认注销</label>
+        <input type="password" id="delete-password" autocomplete="current-password" placeholder="输入密码">
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" onclick="hideDeleteConfirm()" style="flex:1; background:transparent; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:12px; cursor:pointer; font-size:0.95rem;">取消</button>
+          <button type="submit" style="flex:1; background:var(--error); color:#fff; border:none; border-radius:8px; padding:12px; cursor:pointer; font-size:0.95rem; font-weight:600;">确认注销</button>
+        </div>
+        <div class="auth-error" id="delete-error"></div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  // ===== 源码防护（仅抬高门槛，非绝对防护）=====
+  // 技术说明：浏览器必须下载 HTML/CSS/JS 才能渲染页面，因此无法 100% 阻止查看源码。
+  // 以下措施仅拦截普通用户的右键 / 快捷键 / 开发者工具路径，对技术人员无效。
+  // 密码本身已用 SHA-256 哈希存储，源码不含明文，即使被查看也无法还原密码。
+
+  // 1) 禁用右键菜单（拦截"查看源代码""检查"等右键入口）
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // 2) 禁用查看源代码 / 开发者工具 / 保存网页的快捷键
+  document.addEventListener('keydown', function(e) {
+    const key = e.key;
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (key === 'F12') { e.preventDefault(); return false; }                                   // F12
+    if (ctrl && e.shiftKey && ['I','J','C','i','j','c'].includes(key)) { e.preventDefault(); return false; } // DevTools
+    if (ctrl && (key === 'u' || key === 'U')) { e.preventDefault(); return false; }           // Ctrl/Cmd+U 查看源代码
+    if (ctrl && (key === 's' || key === 'S')) { e.preventDefault(); return false; }           // Ctrl/Cmd+S 保存网页
+  });
+
+  // 3) 检测开发者工具打开 → 显示遮罩，遮住页面内容
+  const devOverlay = document.createElement('div');
+  devOverlay.style.cssText = [
+    'position:fixed','inset:0','background:rgba(0,0,0,0.97)','color:#fff',
+    'z-index:99999','display:none','align-items:center','justify-content:center',
+    'text-align:center','padding:24px','font-family:-apple-system,BlinkMacSystemFont,sans-serif'
+  ].join(';');
+  devOverlay.innerHTML =
+    '<div>' +
+      '<div style="font-size:2.4rem;margin-bottom:14px;">🔒</div>' +
+      '<div style="font-size:1.15rem;margin-bottom:8px;font-weight:600;">请关闭开发者工具后继续</div>' +
+      '<div style="color:#94a1b2;font-size:0.85rem;">本活动内容受保护</div>' +
+    '</div>';
+  document.body.appendChild(devOverlay);
+
+  let devtoolsOpen = false;
+  function checkDevtools() {
+    // 尺寸差法：devtools 打开时 outerWidth/Height 与 inner 差值显著变大
+    const threshold = 160;
+    const open = (window.outerWidth - window.innerWidth > threshold) ||
+                 (window.outerHeight - window.innerHeight > threshold);
+    if (open !== devtoolsOpen) {
+      devtoolsOpen = open;
+      devOverlay.style.display = open ? 'flex' : 'none';
+    }
+  }
+  setInterval(checkDevtools, 800);
+
+  // ===== 关卡数据 =====
+  // 密码以 SHA-256 哈希存储（对密码小写形式取哈希），源码不含明文，无法逆向还原。
+  // 如需更换密码：用新密码的小写形式计算 SHA-256，填入 hash 字段即可。
+  //   命令行示例：printf '%s' "你的密码" | shasum -a 256
+  const LEVELS = [
+    { hash: '874900292abe84ebedee1528a65697b115f1f4f13560ff25b6994b585ebc6672', hint: '在此处填写第 1 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/iUqIv41rhwpc' },
+    { hash: 'd1b9d1d446b452463e59f22825b69fc66968ca7bfd3866f613098dcfe0a51a9f', hint: '在此处填写第 2 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/iZnFu41ri6zc' },
+    { hash: '25e2b6b106523880e27763084ffa6a0756335be0d7106022535365b9ad39b4b1', hint: '在此处填写第 3 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/iNZso41riaxe' },
+    { hash: 'f6dcf81b97b20c198fb3300c28ef00a372b76861ff1c240ae0141bd575f203d5', hint: '在此处填写第 4 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/i2JM741rqlgb' },
+    { hash: '42f02b050bef23804eaf197eb8fe6a137eeb774b227dbb131a8c0c4b6c9666af', hint: '在此处填写第 5 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/iLFVN41rigtg' },
+    { hash: '18e1f1c5074ff0d7232f50d30a5c3ec4879e6cdd446e873de11a77e1be66e428', hint: '在此处填写第 6 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/icqLQ41rij3i', urlPwd: 'apmf' },
+    { hash: '615ed7fb1504b0c724a296d7a69e6c7b2f9ea2c57c1d8206c5afdf392ebdfd25', hint: '在此处填写第 7 关的提示文字，例如一段谜题或线索。', url: 'https://wwaoi.lanzouu.com/iH0ml41rip4f' },
+  ];
+
+  let currentLevel = 1;   // 当前已解锁到的关卡（最高可玩的关卡号）
+  let completedCount = 0; // 已完成的关卡数量
+  let userAnswers = new Array(LEVELS.length).fill(''); // 运行时记录玩家输入，仅用于通关展示
+  let levelStats = {}; // 各关通过人数（从后端获取）
+
+  // ===== 部署配置 =====
+  // Worker 同时提供静态页面与 API，使用相对路径即可（同域）
+  const API_BASE = '';
+  
+  const API = {
+    send_code: `${API_BASE}/api/send_code`,
+    register: `${API_BASE}/api/register`,
+    login: `${API_BASE}/api/login`,
+    logout: `${API_BASE}/api/logout`,
+    delete_account: `${API_BASE}/api/delete_account`,
+    me: `${API_BASE}/api/me`,
+    stats: `${API_BASE}/api/stats`,
+    pass: `${API_BASE}/api/pass`
+  };
+
+  // ===== 用户认证状态 =====
+  let currentUser = null;
+  let authChecked = false;
+  let isGuest = false; // 游客模式标志
+
+  // 使用浏览器原生 Web Crypto API 计算 SHA-256（纯本地、无需联网、无外部库）
+  async function sha256(text) {
+    const data = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  // ===== 通过人数统计（调用后端 API）=====
+  // 获取各关通过人数
+  async function fetchStats() {
+    try {
+      const res = await fetch(API.stats, { cache: 'no-store' });
+      if (res.ok) {
+        levelStats = await res.json();
+      }
+    } catch (e) {
+      // 静默失败，不影响游戏（如本地 file:// 打开时无后端）
+    }
+  }
+
+  // 记录通过某关（用 localStorage 防止同一浏览器重复计数）
+  async function recordPass(levelNum) {
+    try {
+      const passed = JSON.parse(localStorage.getItem('answer_passedLevels') || '[]');
+      if (passed.includes(levelNum)) return; // 已记录过，不重复计数
+      passed.push(levelNum);
+      localStorage.setItem('answer_passedLevels', JSON.stringify(passed));
+      
+      // 游客模式下不记录通过人数（不调用后端 API）
+      if (!isGuest && currentUser) {
+        const res = await fetch(API.pass, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level: levelNum }),
+          credentials: 'include'
+        });
+        const data = await res.json();
+        return data;
+      }
+    } catch (e) {
+      // 静默失败
+    }
+  }
+
+  // 生成某关通过人数的 HTML
+  function passCountHtml(levelNum) {
+    const count = levelStats[levelNum] || 0;
+    return `<div class="pass-count">👥 已有 ${count} 人通过</div>`;
+  }
+
+  // ===== 用户认证相关 =====
+  function switchAuthTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-register').classList.toggle('active', tab === 'register');
+  }
+
+  // 进入游客模式
+  function enterGuestMode() {
+    isGuest = true;
+    currentUser = { username: '游客', email: '' }; // 虚拟用户对象
+    // 安全地访问 DOM 元素（加 null 检查，防止报错中断初始化）
+    const authOverlay = document.getElementById('auth-overlay');
+    if (authOverlay) authOverlay.style.display = 'none';
+    const userBar = document.getElementById('user-bar');
+    if (userBar) userBar.style.display = 'flex';
+    const userName = document.getElementById('user-name');
+    if (userName) userName.textContent = '👁 游客';
+    const userEmail = document.getElementById('user-email');
+    if (userEmail) userEmail.textContent = '';
+    // 加载本地进度
+    const passedLevels = JSON.parse(localStorage.getItem('answer_passedLevels') || '[]');
+    // 根据本地进度设置当前关卡
+    if (passedLevels.length > 0) {
+      currentLevel = Math.min(passedLevels.length + 1, LEVELS.length);
+      completedCount = passedLevels.length;
+      // 标记用户已通过的关卡
+      passedLevels.forEach(level => {
+        userAnswers[level - 1] = '已通过';
+      });
+    }
+    // 渲染页面
+    renderLevels();
+    // 尝试获取统计数据（只读，失败不影响）
+    fetchStats();
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    try {
+      const res = await fetch(API.login, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.ok) {
+        onLoginSuccess(data.user);
+      } else {
+        errEl.textContent = data.error || '登录失败';
+      }
+    } catch (e) {
+      errEl.textContent = '网络错误，请重试';
+    }
+  }
+
+  // 发送邮箱验证码（60 秒倒计时）
+  async function sendVerificationCode() {
+    const email = document.getElementById('reg-email').value.trim();
+    const errEl = document.getElementById('reg-error');
+    const btn = document.getElementById('send-code-btn');
+    errEl.textContent = '';
+
+    if (!email) {
+      errEl.textContent = '请输入邮箱';
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@qq\.com$/.test(email)) {
+      errEl.textContent = '请输入有效的 QQ 邮箱';
+      return;
+    }
+
+    try {
+      btn.disabled = true;
+      btn.textContent = '发送中...';
+      const res = await fetch(API.send_code, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (data.debug_code) {
+          // 邮件服务未配置，直接在页面显示验证码
+          errEl.innerHTML = '验证码：<strong style="font-size:1.15em;letter-spacing:2px;font-family:\'SF Mono\',Menlo,monospace">' + data.debug_code + '</strong>（5 分钟内有效）';
+        } else {
+          errEl.textContent = '验证码已发送，请查收邮件';
+        }
+        errEl.style.color = 'var(--success)';
+        // 60 秒倒计时
+        let countdown = 60;
+        btn.textContent = `${countdown}秒后重发`;
+        const timer = setInterval(() => {
+          countdown--;
+          if (countdown <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = '发送验证码';
+          } else {
+            btn.textContent = `${countdown}秒后重发`;
+          }
+        }, 1000);
+      } else {
+        errEl.textContent = data.error || '发送失败';
+        btn.disabled = false;
+        btn.textContent = '发送验证码';
+      }
+    } catch (e) {
+      errEl.textContent = '网络错误，请重试';
+      btn.disabled = false;
+      btn.textContent = '发送验证码';
+    }
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const code = document.getElementById('reg-code').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const errEl = document.getElementById('reg-error');
+    errEl.style.color = 'var(--error)';
+    errEl.textContent = '';
+
+    // 前端快速校验
+    if (!username) {
+      errEl.textContent = '请输入用户名';
+      return;
+    }
+    if (username.length < 2 || username.length > 20) {
+      errEl.textContent = '用户名长度 2-20';
+      return;
+    }
+    if (!email) {
+      errEl.textContent = '请输入邮箱';
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@qq\.com$/.test(email)) {
+      errEl.textContent = '请输入有效的 QQ 邮箱';
+      return;
+    }
+    if (!code) {
+      errEl.textContent = '请输入验证码';
+      return;
+    }
+    if (password.length < 3) {
+      errEl.textContent = '密码至少 3 位';
+      return;
+    }
+
+    try {
+      const res = await fetch(API.register, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, code, password }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.ok) {
+        onLoginSuccess(data.user);
+      } else {
+        errEl.textContent = data.error || '注册失败';
+      }
+    } catch (e) {
+      errEl.textContent = '网络错误，请重试';
+    }
+  }
+
+  async function logout() {
+    // 游客模式下：重置本地进度
+    isGuest = true;
+    currentUser = { username: '游客', email: '' };
+    // 清除本地通关记录
+    localStorage.removeItem('answer_passedLevels');
+    // 重置进度
+    resetGame();
+    document.getElementById('user-name').textContent = '👁 游客';
+    document.getElementById('user-email').textContent = '';
+  }
+
+  // ===== 注销账号 =====
+  function showDeleteConfirm() {
+    document.getElementById('delete-password').value = '';
+    document.getElementById('delete-error').textContent = '';
+    document.getElementById('delete-overlay').style.display = 'flex';
+  }
+
+  function hideDeleteConfirm() {
+    document.getElementById('delete-overlay').style.display = 'none';
+  }
+
+  async function doDeleteAccount() {
+    const password = document.getElementById('delete-password').value;
+    const errEl = document.getElementById('delete-error');
+    errEl.textContent = '';
+
+    if (!password) {
+      errEl.textContent = '请输入密码';
+      return;
+    }
+
+    try {
+      const res = await fetch(API.delete_account, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.ok) {
+        hideDeleteConfirm();
+        // 清除 localStorage 中的通关记录
+        localStorage.removeItem('answer_passedLevels');
+        // 清除认证状态
+        currentUser = null;
+        document.getElementById('user-bar').style.display = 'none';
+        document.getElementById('auth-overlay').style.display = 'flex';
+        alert('✅ 账号已注销，感谢您的参与！');
+      } else {
+        errEl.textContent = data.error || '注销失败';
+      }
+    } catch (e) {
+      errEl.textContent = '网络错误，请重试';
+    }
+  }
+
+  function onLoginSuccess(user) {
+    currentUser = user;
+    document.getElementById('auth-overlay').style.display = 'none';
+    renderUserBar();
+    resetGame();
+  }
+
+  function renderUserBar() {
+    if (!currentUser) return;
+    document.getElementById('user-bar').style.display = 'flex';
+    document.getElementById('user-name').textContent = currentUser.username;
+    document.getElementById('user-email').textContent = currentUser.email || '';
+  }
+
+  async function checkAuth() {
+    try {
+      const res = await fetch(API.me, { credentials: 'include' });
+      const data = await res.json();
+      if (data.ok && data.user) {
+        onLoginSuccess(data.user);
+        authChecked = true;
+        return;
+      }
+      // 未登录，显示登录/注册界面
+      document.getElementById('auth-overlay').style.display = 'flex';
+      authChecked = true;
+    } catch (e) {
+      // 网络错误（无后端），进入游客模式
+      enterGuestMode();
+    }
+  }
+
+  // ===== 渲染辅助：关卡可见性 =====
+  function getLevelStatuses() {
+    return function(levelNum) {
+      const isCompleted = levelNum < currentLevel;
+      const isUnlocked = levelNum === currentLevel;
+      const isLocked = !isCompleted && !isUnlocked;
+      return { isLocked, isCompleted };
+    };
+  }
+
+  // 生成"已经有人通过"的提示 HTML
+  function alreadyPassedHtml(levelNum) {
+    const count = levelStats[levelNum] || 0;
+    if (count === 0) return '';
+    return `<div class="already-passed">✅ 已经有 ${count} 人通过，请前往下一个part</div>`;
+  }
+
+  const levelsContainer = document.getElementById('levels');
+
+  function renderLevels() {
+    const getStatus = getLevelStatuses();
+    levelsContainer.innerHTML = '';
+    LEVELS.forEach((level, index) => {
+      const levelNum = index + 1;
+      const status = getStatus(levelNum);
+      const { isLocked, isCompleted } = status;
+
+      const card = document.createElement('div');
+      card.className = 'level-card';
+      card.id = `level-${levelNum}`;
+      if (isCompleted) card.classList.add('completed');
+      else if (!isLocked) card.classList.add('unlocked');
+
+      let statusIcon = '🔒';
+      if (isCompleted) statusIcon = '✅';
+      else if (!isLocked) statusIcon = '▶️';
+
+      if (isLocked) {
+        card.innerHTML = `
+          <div class="level-header">
+            <div>
+              <div class="level-number">第 ${levelNum} 关</div>
+              <div class="level-title">完成上一关后解锁</div>
+            </div>
+            <div class="level-status" aria-hidden="true">${statusIcon}</div>
+          </div>
+          ${passCountHtml(levelNum)}
+          ${alreadyPassedHtml(levelNum)}
+        `;
+      } else if (isCompleted) {
+        card.innerHTML = `
+          <div class="level-header">
+            <div>
+              <div class="level-number">第 ${levelNum} 关</div>
+              <div class="level-title">${escapeHtml(level.hint)}</div>
+            </div>
+            <div class="level-status" aria-hidden="true">${statusIcon}</div>
+          </div>
+          <div class="level-hint">已通关 ✓</div>
+          <div class="download-group">
+            <a href="${level.url}" target="_blank" rel="noopener" class="download-btn">📥 下载题目</a>
+            ${level.urlPwd ? `<span class="download-pwd">访问密码：${escapeHtml(level.urlPwd)}</span>` : ''}
+          </div>
+          ${passCountHtml(levelNum)}
+          ${alreadyPassedHtml(levelNum)}
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="level-header">
+            <div>
+              <div class="level-number">第 ${levelNum} 关</div>
+              <div class="level-title">${escapeHtml(level.hint)}</div>
+            </div>
+            <div class="level-status" aria-hidden="true">${statusIcon}</div>
+          </div>
+          <div class="level-hint">输入密码以解锁下一关</div>
+          <div class="input-group">
+            <input type="text" class="password-input" id="input-${levelNum}"
+                   placeholder="输入密码..."
+                   autocomplete="off"
+                   onkeypress="handleEnter(event, ${levelNum})">
+            <button class="verify-btn" id="btn-${levelNum}"
+                    onclick="verifyPassword(${levelNum})">验证</button>
+          </div>
+          <div class="download-group">
+            <a href="${level.url}" target="_blank" rel="noopener" class="download-btn">📥 下载题目</a>
+            ${level.urlPwd ? `<span class="download-pwd">访问密码：${escapeHtml(level.urlPwd)}</span>` : ''}
+          </div>
+          ${passCountHtml(levelNum)}
+          ${alreadyPassedHtml(levelNum)}
+          <div class="message" id="msg-${levelNum}"></div>
+        `;
+      }
+
+      levelsContainer.appendChild(card);
+    });
+
+    updateProgress();
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function updateProgress() {
+    document.getElementById('progress-text').textContent = `${completedCount} / 7`;
+  }
+
+  function handleEnter(event, levelNum) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      verifyPassword(levelNum);
+    }
+  }
+
+  async function verifyPassword(levelNum) {
+    const input = document.getElementById(`input-${levelNum}`);
+    const msg = document.getElementById(`msg-${levelNum}`);
+    const card = document.getElementById(`level-${levelNum}`);
+    const btn = document.getElementById(`btn-${levelNum}`);
+    const inputValue = input.value.trim();
+
+    if (!inputValue) {
+      msg.className = 'message error';
+      msg.textContent = '❌ 请先输入密码';
+      return;
+    }
+
+    // 防止重复提交
+    btn.disabled = true;
+    msg.className = 'message';
+    msg.textContent = '验证中…';
+
+    // 对输入的小写形式取哈希后与存储的哈希比较（不区分大小写）
+    const inputHash = await sha256(inputValue.toLowerCase());
+    const correctHash = LEVELS[levelNum - 1].hash;
+
+    if (inputHash === correctHash) {
+      // 验证成功：记录玩家输入（仅存于内存，用于通关展示）
+      userAnswers[levelNum - 1] = inputValue;
+      msg.className = 'message success';
+      msg.textContent = '✅ 密码正确！已解锁下一关';
+      input.disabled = true;
+      card.classList.remove('unlocked');
+      card.classList.add('completed');
+      completedCount++;
+      updateProgress();
+
+      // 除第7关外，通过本关后自动打开下一关的下载地址（新标签页）
+      if (levelNum < LEVELS.length && levelNum + 1 !== 7) {
+        const win = window.open(LEVELS[levelNum].url, '_blank');
+        if (!win) {
+          // 弹窗被浏览器拦截，提示用户手动点击下一关的下载按钮
+          msg.textContent = `✅ 已解锁第 ${levelNum + 1} 关，请点击下方"下载题目"获取题目`;
+        }
+      }
+
+      // 统计：记录通过人数（防重复计数）
+      recordPass(levelNum);
+
+      if (levelNum < LEVELS.length) {
+        currentLevel = levelNum + 1;
+        setTimeout(async () => {
+          await fetchStats();   // 刷新通过人数
+          renderLevels();
+          const nextCard = document.getElementById(`level-${currentLevel}`);
+          if (nextCard) {
+            nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // 自动聚焦下一关输入框
+            const nextInput = document.getElementById(`input-${currentLevel}`);
+            if (nextInput) nextInput.focus();
+          }
+        }, 700);
+      } else {
+        // 全部通关
+        setTimeout(async () => {
+          await fetchStats();
+          showCelebration();
+        }, 700);
+      }
+    } else {
+      // 验证失败：不清除输入内容，重新启用按钮
+      msg.className = 'message error';
+      msg.textContent = '❌ 密码错误，请再试';
+      btn.disabled = false;
+      card.classList.remove('shake');
+      // 触发重排以重新播放抖动动画
+      void card.offsetWidth;
+      card.classList.add('shake');
+    }
+  }
+
+  function showCelebration() {
+    const list = document.getElementById('answers-list');
+    list.innerHTML = '';
+    // 源码不含明文密码，此处展示的是玩家自己输入的答案（仅存于运行时内存）
+    LEVELS.forEach((level, index) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="label">第 ${index + 1} 关</span><span class="value">${escapeHtml(userAnswers[index] || '')}</span>`;
+      list.appendChild(li);
+    });
+    document.getElementById('celebration').classList.add('show');
+  }
+
+  function resetGame() {
+    currentLevel = 1;
+    completedCount = 0;
+    userAnswers = new Array(LEVELS.length).fill('');
+    document.getElementById('celebration').classList.remove('show');
+    renderLevels();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 初始化：先检查登录状态，未登录则显示登录/注册界面
+  (async function init() {
+    await checkAuth();
+    if (!authChecked) {
+      // checkAuth 出错也进入游客模式
+      enterGuestMode();
+    }
+  })();
+</script>
+</body>
+</html>
