@@ -28,15 +28,33 @@ export default async function handler(req, res) {
 
   const resendKey = process.env.RESEND_API_KEY;
   const senderEmail = process.env.SENDER_EMAIL;
+  let emailResult = { ok: false, error: '邮件服务未配置' };
   if (resendKey && senderEmail) {
     try {
-      await fetch('https://api.resend.com/emails', {
+      const sendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: senderEmail, to: [email], subject: '解密闯关 - 邮箱验证码', text: `您好！\n\n您的验证码是：${code}\n\n5 分钟内有效。` })
       });
-    } catch (e) { console.error('Email send failed:', e); }
+      const body = await sendRes.text();
+      if (sendRes.ok) {
+        emailResult = { ok: true };
+      } else {
+        console.error('Resend API error:', sendRes.status, body);
+        emailResult = { ok: false, error: `发送失败(${sendRes.status}): ${body.substring(0, 200)}` };
+      }
+    } catch (e) {
+      console.error('Email send failed:', e);
+      emailResult = { ok: false, error: String(e.message || e).substring(0, 200) };
+    }
   }
 
-  return jsonResponse({ ok: true, message: '验证码已发送', debug_code: code, debug_email: email });
+  return jsonResponse({
+    ok: true,
+    message: '验证码已生成',
+    debug_code: code,
+    debug_email: email,
+    email_sent: emailResult.ok,
+    email_error: emailResult.ok ? null : emailResult.error
+  });
 }
