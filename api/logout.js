@@ -1,4 +1,4 @@
-import { jsonResponse } from './_shared.js';
+import { jsonResponse, kv } from './_shared.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return jsonResponse({}, 204);
@@ -14,7 +14,6 @@ export default async function handler(req, res) {
     }
   }
   if (token) {
-    const { kv } = await import('@vercel/kv');
     await kv.del(`sess:${token}`);
   }
 
