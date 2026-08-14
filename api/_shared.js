@@ -1,131 +1,113 @@
-// 共享工具函数 - 使用 Vercel Edge Config REST API 替代 KV
+// 共享工具函数 - 使用内存缓存优先，Edge Config 作为持久化层
 
 const TOTAL_LEVELS = 7;
 const SESSION_TTL = 7 * 24 * 3600;
 const CODE_TTL = 300;
 const CODE_RESEND_COOLDOWN = 60;
 
+// 简易内存缓存（主要存储，Serverless 函数内有效）
+const memoryStore = new Map();
+const memoryTTL = new Map();
+
+// 带超时的 fetch
+function fetchWithTimeout(url, options, timeoutMs = 3000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
 // Edge Config 配置（从环境变量获取）
-// Vercel 连接 Global Config Store 后会注入 GLOBAL_CONFIG 或 EDGE_CONFIG
-// 格式为: https://edge-config.vercel.com/ecfg_xxx?token=xxx
 function getEdgeConfig() {
-  // 尝试从连接字符串解析
   const connStr = process.env.GLOBAL_CONFIG || process.env.EDGE_CONFIG || '';
   if (connStr) {
     try {
       const url = new URL(connStr);
-      const id = url.pathname.replace(/^\//, ''); // 去掉前导斜杠
+      const id = url.pathname.replace(/^\//, '');
       const token = url.searchParams.get('token') || '';
-      return {
-        id,
-        token,
-        baseUrl: `https://edge-config.vercel.com/${id}`
-      };
-    } catch (e) {
-      console.error('Failed to parse Edge Config connection string:', e);
-    }
+      if (id && token) {
+        return { id, token, baseUrl: `https://edge-config.vercel.com/${id}` };
+      }
+    } catch (e) {}
   }
-  // 兼容旧格式：分别设置的环境变量
-  const id = process.env.EDGE_CONFIG_ID;
-  const token = process.env.EDGE_CONFIG_TOKEN;
-  const baseUrl = process.env.EDGE_CONFIG_URL;
-  return {
-    id: id || '',
-    token: token || '',
-    baseUrl: baseUrl || `https://edge-config.vercel.com/${id}`
-  };
+  return null;
 }
 
-// 简易内存缓存（用于无环境变量时的回退方案）
-const memoryStore = new Map();
-const memoryTTL = new Map();
-
 export async function kvGet(key) {
-  const cfg = getEdgeConfig();
-  if (cfg.token && cfg.id) {
-    try {
-      const res = await fetch(`${cfg.baseUrl}/item/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${cfg.token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data;
-      }
-      return null;
-    } catch (e) {
-      console.error('Edge Config read error:', e);
-    }
-  }
-  // 回退：内存缓存
+  // 先查内存缓存
   const now = Math.floor(Date.now() / 1000);
   const ttl = memoryTTL.get(key);
   if (ttl && now > ttl) {
     memoryStore.delete(key);
     memoryTTL.delete(key);
-    return null;
+  } else if (memoryStore.has(key)) {
+    const val = memoryStore.get(key);
+    return val;
   }
-  return memoryStore.get(key) || null;
+
+  // 尝试从 Edge Config 读取
+  const cfg = getEdgeConfig();
+  if (cfg) {
+    try {
+      const res = await fetchWithTimeout(`${cfg.baseUrl}/item/${encodeURIComponent(key)}`, {
+        headers: { Authorization: `Bearer ${cfg.token}` }
+      }, 3000);
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (e) {
+      // 超时或错误，继续返回 null
+    }
+  }
+  return null;
 }
 
 export async function kvSet(key, value, options = {}) {
-  const cfg = getEdgeConfig();
   const val = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  if (cfg.token && cfg.id) {
-    try {
-      // Edge Config 通过 PATCH /items 来更新
-      const res = await fetch(`${cfg.baseUrl}/items`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${cfg.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          items: [{ operation: 'upsert', key, value: val }]
-        })
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('Edge Config write error:', res.status, text);
-      }
-    } catch (e) {
-      console.error('Edge Config write error:', e);
-    }
-  }
-  // 内存缓存同步
+
+  // 先写入内存缓存
   memoryStore.set(key, val);
   if (options.ex) {
     memoryTTL.set(key, Math.floor(Date.now() / 1000) + options.ex);
   }
+
+  // 异步写入 Edge Config（不等待，避免阻塞响应）
+  const cfg = getEdgeConfig();
+  if (cfg) {
+    fetchWithTimeout(`${cfg.baseUrl}/items`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${cfg.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        items: [{ operation: 'upsert', key, value: val }]
+      })
+    }, 3000).catch(() => {});
+  }
 }
 
 export async function kvDel(key) {
-  const cfg = getEdgeConfig();
-  if (cfg.token && cfg.id) {
-    try {
-      const res = await fetch(`${cfg.baseUrl}/items`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${cfg.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          items: [{ operation: 'delete', key }]
-        })
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('Edge Config delete error:', res.status, text);
-      }
-    } catch (e) {
-      console.error('Edge Config delete error:', e);
-    }
-  }
-  // 内存缓存同步
   memoryStore.delete(key);
   memoryTTL.delete(key);
+
+  const cfg = getEdgeConfig();
+  if (cfg) {
+    fetchWithTimeout(`${cfg.baseUrl}/items`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${cfg.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        items: [{ operation: 'delete', key }]
+      })
+    }, 3000).catch(() => {});
+  }
 }
 
-// 导出 kv 对象，保持和原 API 兼容
+// 导出 kv 对象
 export const kv = {
   get: kvGet,
   set: kvSet,
