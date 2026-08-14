@@ -6,7 +6,26 @@ const CODE_TTL = 300;
 const CODE_RESEND_COOLDOWN = 60;
 
 // Edge Config 配置（从环境变量获取）
+// Vercel 连接 Global Config Store 后会注入 GLOBAL_CONFIG 或 EDGE_CONFIG
+// 格式为: https://edge-config.vercel.com/ecfg_xxx?token=xxx
 function getEdgeConfig() {
+  // 尝试从连接字符串解析
+  const connStr = process.env.GLOBAL_CONFIG || process.env.EDGE_CONFIG || '';
+  if (connStr) {
+    try {
+      const url = new URL(connStr);
+      const id = url.pathname.replace(/^\//, ''); // 去掉前导斜杠
+      const token = url.searchParams.get('token') || '';
+      return {
+        id,
+        token,
+        baseUrl: `https://edge-config.vercel.com/${id}`
+      };
+    } catch (e) {
+      console.error('Failed to parse Edge Config connection string:', e);
+    }
+  }
+  // 兼容旧格式：分别设置的环境变量
   const id = process.env.EDGE_CONFIG_ID;
   const token = process.env.EDGE_CONFIG_TOKEN;
   const baseUrl = process.env.EDGE_CONFIG_URL;

@@ -27,9 +27,10 @@ export default async function handler(req, res) {
   await kv.set('latest_code', JSON.stringify({ email, code, time: now }), { ex: CODE_TTL });
 
   const resendKey = process.env.RESEND_API_KEY;
-  const senderEmail = process.env.SENDER_EMAIL;
+  // Resend 免费计划只能用 onboarding@resend.dev 发邮件（除非验证了自己的域名）
+  const senderEmail = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
   let emailResult = { ok: false, error: '邮件服务未配置' };
-  if (resendKey && senderEmail) {
+  if (resendKey) {
     try {
       const sendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
